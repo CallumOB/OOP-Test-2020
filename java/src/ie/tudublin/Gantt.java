@@ -11,6 +11,9 @@ public class Gantt extends PApplet
 	private int numLines = 30;
 	private int namesPart = 150; // the width of the section containing the names
 	private float rowHeight = 40;
+	private int offset = 30;
+	private int whichTask = -1;
+	private boolean isEnd = false;
 	ArrayList<Task> tasks = new ArrayList<>();
 	
 	public void settings()
@@ -33,19 +36,62 @@ public class Gantt extends PApplet
 			println(task.toString());
 		}
 	}
-	
+
 	public void mousePressed()
 	{
-		println("Mouse pressed");	
+		for(int i = 0 ; i < tasks.size() ; i ++)
+		{
+			float y1 = (offset + offset + rowHeight * i) - 15;
+			float y2 = (offset + offset + rowHeight * i) + 20;
+
+			float x1 = map(tasks.get(i).getStart(), 1, numLines, namesPart, width - offset);
+			float x2 = map(tasks.get(i).getEnd(), 1, numLines, namesPart, width - offset);
+			
+			if (mouseX >= x1 && mouseX <= x1 + 20 && mouseY >= y1 && mouseY <= y2)
+			{
+				whichTask = i;
+				isEnd = false;
+				return;
+			}
+
+			if (mouseX <= x2 && mouseX >= x2 - 20 && mouseY >= y1 && mouseY <= y2)
+			{
+				whichTask = i;
+				isEnd = true;
+				return;
+			}
+		}		
+		// default value for whichTask
+		whichTask = -1;	
 	}
 
 	public void mouseDragged()
 	{
-		println("Mouse dragged");
+		if (whichTask != -1)
+		{
+			int month = (int)map(mouseX, namesPart, width - offset, 1, numLines);
+			
+			if (month >= 1 && month <= numLines)
+			{
+				Task task = tasks.get(whichTask); 
+				if (isEnd)
+				{
+					if (month - task.getStart() > 0)
+					{
+						task.setEnd(month);
+					}
+				}
+				else
+				{
+					if (task.getEnd() - month > 0 )
+					{
+						task.setStart(month);
+					}
+				}
+			}
+		}
 	}
 
-	
-	
 	public void setup() 
 	{
 		colorMode(HSB);
@@ -60,8 +106,6 @@ public class Gantt extends PApplet
 	}
 
 	public void displayTasks() {
-		int offset = 30;
-
 		textSize(12);
 		textAlign(CENTER, CENTER);
 
